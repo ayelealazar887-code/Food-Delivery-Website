@@ -2,24 +2,27 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import foodRouter from './routes/food.route';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-
+//middleware
+app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "http://localhost:5173",
   })
 );
-app.use(bodyParser.json());
+
+//DB connection
+
+//api endpoints
+app.use('/api/food', foodRouter);
 
 app.get('/', (req, res) => {
-  res.send('Hello, World!');
+  res.send('API is running...');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+export default app;
