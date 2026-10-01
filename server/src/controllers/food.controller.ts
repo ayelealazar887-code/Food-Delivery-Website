@@ -5,37 +5,39 @@ import fs from "fs";
 
 const addFood = async (req: Request, res: Response) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
+    console.log('BODY:', req.body)
+    console.log('FILE:', req.file)
 
-    const { name, description, price, category } = req.body;
+    const { name, description, price, category } = req.body
 
     if (!req.file) {
       return res.status(400).json({
-        message: "Image file is required",
-      });
+        message: 'Image file is required',
+      })
     }
 
-    console.log("Uploading image to Cloudinary...");
+    console.log('Uploading image to Cloudinary...')
 
     const result = await new Promise<any>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        {},
+        {
+          folder: 'food-ordering-api',
+        },
         (error, result) => {
           if (error) {
-            reject(error);
+            reject(error)
           } else {
-            resolve(result);
+            resolve(result)
           }
-        },
-      );
+        }
+      )
 
-      uploadStream.end(req.file!.buffer);
-    });
+      uploadStream.end(req.file!.buffer)
+    })
 
-    console.log("Cloudinary result:", result);
+    console.log('Cloudinary result:', result)
 
-    console.log("Creating food in database...");
+    console.log('Creating food in database...')
 
     const food = await prisma.food.create({
       data: {
@@ -45,24 +47,22 @@ const addFood = async (req: Request, res: Response) => {
         image: result.secure_url,
         category,
       },
-    });
+    })
 
-    console.log("Food created:", food);
+    console.log('Food created:', food)
 
     return res.status(201).json({
       success: true,
-      message: "Food added successfully",
+      message: 'Food added successfully',
       food,
-    });
+    })
   } catch (error) {
-    console.error("ADD FOOD ERROR:");
-    console.dir(error, { depth: null });
+    console.error('ADD FOOD ERROR:', error)
 
     return res.status(500).json({
-      message: "Error adding food",
-      error: error instanceof Error ? error.message : error,
-    });
+      message: 'Error adding food',
+    })
   }
-};
+}
 
 export { addFood };
