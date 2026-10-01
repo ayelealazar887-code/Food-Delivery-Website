@@ -1,14 +1,23 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { assets } from '../assets/assets';
+import React from 'react'
+import { Link, NavLink } from 'react-router-dom'
+import { assets } from '../assets/assets'
+import { StoreContext } from '../context/StoreContext'
 
-function Navbar() {
+function Navbar({
+  setShowLogin,
+}: {
+  setShowLogin: React.Dispatch<React.SetStateAction<boolean>>
+}) {
+  const { getTotalCartAmount } = React.useContext(StoreContext) || {
+    getTotalCartAmount: () => 0,
+  }
+
   const navLinks = [
     { name: 'home', label: 'Home', path: '/' },
     { name: 'menu', label: 'Menu', path: '/menu' },
     { name: 'mobile-app', label: 'Mobile App', path: '/mobile-app' },
     { name: 'contact-us', label: 'Contact Us', path: '/contact-us' },
-  ];
+  ]
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -61,7 +70,7 @@ function Navbar() {
             />
           </button>
 
-          <NavLink
+          <Link
             to="/cart"
             className="relative cursor-pointer p-2 hover:bg-orange-50 rounded-full transition-all duration-200"
           >
@@ -71,19 +80,21 @@ function Navbar() {
               className="w-6 h-6 object-contain"
             />
 
-            <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-orange-500 rounded-full ring-2 ring-white animate-pulse" />
-          </NavLink>
+            {getTotalCartAmount() > 0 && (
+              <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-orange-500 rounded-full ring-2 ring-white animate-pulse" />
+            )}
+          </Link>
 
-          <NavLink
-            to="/login"
+          <button
+            onClick={() => setShowLogin(true)}
             className="bg-transparent hover:bg-orange-500 text-gray-700 hover:text-white border border-orange-500 px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-300 shadow-sm hover:shadow-md active:scale-95"
           >
             Sign In
-          </NavLink>
+          </button>
         </div>
       </div>
     </header>
-  );
+  )
 }
 
-export default Navbar;
+export default Navbar

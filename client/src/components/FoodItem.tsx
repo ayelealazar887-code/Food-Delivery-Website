@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useContext } from 'react'
 import { assets } from '../assets/assets'
+import { StoreContext } from '../context/StoreContext'
 
 type FoodItemProps = {
   id: string
@@ -16,8 +17,15 @@ function FoodItem({
   description,
   image,
 }: FoodItemProps) {
-    
-  const [itemCount, setItemCount] = useState<number>(0)
+  const context = useContext(StoreContext)
+
+  if (!context) {
+    throw new Error('FoodItem must be used inside StoreContextProvider')
+  }
+
+  const { cartItems, addToCart, removeFromCart } = context
+
+  const itemCount = cartItems[id] || 0
 
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -30,7 +38,7 @@ function FoodItem({
 
         {!itemCount ? (
           <img
-            onClick={() => setItemCount((prev) => prev + 1)}
+            onClick={() => addToCart(id)}
             src={assets.add_icon_white}
             alt="Add"
             className="absolute bottom-3 right-3 w-9 h-9 cursor-pointer hover:scale-110 transition-transform duration-200"
@@ -38,7 +46,7 @@ function FoodItem({
         ) : (
           <div className="absolute bottom-3 right-3 flex items-center gap-2 bg-white rounded-full px-2 py-1 shadow-md">
             <img
-              onClick={() => setItemCount((prev) => prev - 1)}
+              onClick={() => removeFromCart(id)}
               src={assets.remove_icon_red}
               alt="Remove"
               className="w-7 h-7 cursor-pointer hover:scale-110 transition-transform duration-200"
@@ -49,7 +57,7 @@ function FoodItem({
             </p>
 
             <img
-              onClick={() => setItemCount((prev) => prev + 1)}
+              onClick={() => addToCart(id)}
               src={assets.add_icon_green}
               alt="Add"
               className="w-7 h-7 cursor-pointer hover:scale-110 transition-transform duration-200"
