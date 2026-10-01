@@ -1,26 +1,12 @@
-import { createContext, type ReactNode } from 'react'
+import { createContext } from 'react'
 import { food_list } from '../assets/assets'
 
-type StoreContextType = {
+export type StoreContextType = {
   food_list: typeof food_list
+  cartItems: { [key: string]: number }
+  addToCart: (itemId: string) => void
+  removeFromCart: (itemId: string) => void
+  getTotalCartAmount: () => number
 }
 
 export const StoreContext = createContext<StoreContextType | null>(null)
-
-type StoreContextProviderProps = {
-  children: ReactNode
-}
-
-function StoreContextProvider({ children }: StoreContextProviderProps) {
-  const contextValue: StoreContextType = {
-    food_list,
-  }
-
-  return (
-    <StoreContext.Provider value={contextValue}>
-      {children}
-    </StoreContext.Provider>
-  )
-}
-
-export default StoreContextProvider
