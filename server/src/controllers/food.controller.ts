@@ -4,47 +4,65 @@ import prisma from "../config/prisma";
 import fs from "fs";
 
 const addFood = async (req: Request, res: Response) => {
-    try {
-        const { name, description, price, category } = req.body;
+  try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
 
-        if(!req.file) {
-            return res.status(400).json({ message: "Image file is required" });
-        }
+    const { name, description, price, category } = req.body;
 
-        const result = await new Promise<any>((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-                { folder: "food_images" },
-                (error, result) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(result);
-                    }
-                }
-            );
-
-            uploadStream.end(req.file!.buffer);
-        });
-
-        const newFood = await prisma.food.create({
-            data: {
-                name,
-                description,
-                price: parseFloat(price),
-                image: result.secure_url, 
-                category,
-            },
-        });
-
-        return res.status(201).json({
-        success: true,
-        message: 'Food added successfully',
-        newFood,
-    })
-    } catch (error) {
-        res.status(500).json({ message: "Error adding food" });
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Image file is required",
+      });
     }
-}
 
+    console.log("Uploading image to Cloudinary...");
+
+    const result = await new Promise<any>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {},
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        },
+      );
+
+      uploadStream.end(req.file!.buffer);
+    });
+
+    console.log("Cloudinary result:", result);
+
+    console.log("Creating food in database...");
+
+    const food = await prisma.food.create({
+      data: {
+        name,
+        description,
+        price: Number(price),
+        image: result.secure_url,
+        category,
+      },
+    });
+
+    console.log("Food created:", food);
+
+    return res.status(201).json({
+      success: true,
+      message: "Food added successfully",
+      food,
+    });
+  } catch (error) {
+    console.error("ADD FOOD ERROR:");
+    console.dir(error, { depth: null });
+
+    return res.status(500).json({
+      message: "Error adding food",
+      error: error instanceof Error ? error.message : error,
+    });
+  }
+};
 
 export { addFood };
