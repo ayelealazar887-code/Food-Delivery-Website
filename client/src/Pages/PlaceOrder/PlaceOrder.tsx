@@ -1,9 +1,9 @@
 import React from 'react'
 
-function Placeholder() {
+function PlaceOrder() {
   return (
-    <div>Placeholder</div>
+    <div>PlaceOrder</div>
   )
 }
 
-export default Placeholder
+export default PlaceOrder
