@@ -2,7 +2,9 @@ import type { Request, Response } from "express";
 import cloudinary from "../config/cloudinary";
 import prisma from "../config/prisma";
 import fs from "fs";
+import { log } from "console";
 
+//Add food
 const addFood = async (req: Request, res: Response) => {
   try {
     console.log('BODY:', req.body)
@@ -65,4 +67,67 @@ const addFood = async (req: Request, res: Response) => {
   }
 }
 
-export { addFood };
+
+//list Foods
+const listFood = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const foods = await prisma.food.findMany({})
+    res.status(200).json({
+      success: true,
+      data: foods
+    })
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch."
+    })
+  }
+}
+
+//Remove foods
+const removeFood = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { id } = req.body
+
+    await prisma.food.delete({
+      where: {
+        id
+      }
+    })
+
+    return res.json({
+      success: true,
+      message: "Food removed successfully"
+    })
+  } catch (error) {
+    console.log(error)
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to remove food"
+    })
+  }
+}
+
+//update foods
+const updateFood = async (
+  req: Request,
+  res: Response
+) => {
+
+}
+
+
+export {
+  addFood,
+  listFood,
+  removeFood,
+  updateFood
+};
