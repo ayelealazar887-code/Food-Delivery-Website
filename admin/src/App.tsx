@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState } from 'react'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import { Routes, Route } from 'react-router-dom'
@@ -8,22 +8,28 @@ import Orders from './pages/Orders'
 import { ToastContainer } from 'react-toastify';
 
 function App() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   return (
-    <div>
+    <div className="min-h-screen bg-slate-50 text-slate-800">
       <ToastContainer />
-      <Navbar />
-      <hr />
+      <Sidebar
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
 
-      <div className="flex">
-        <Sidebar />
-
-        <div className="flex-1">
+      <div className="ml-0 min-h-screen min-w-0 md:ml-64">
+        <Navbar
+          isMenuOpen={isMobileMenuOpen}
+          onMenuClick={() => setIsMobileMenuOpen(true)}
+        />
+        <main className="min-w-0">
           <Routes>
             <Route path="/add" element={<Add />} />
             <Route path="/list" element={<List />} />
             <Route path="/orders" element={<Orders />} />
           </Routes>
-        </div>
+        </main>
       </div>
     </div>
   )

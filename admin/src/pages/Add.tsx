@@ -61,7 +61,7 @@ function Add() {
         setImage(null);
         toast.success(response.data.message);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to add product");
     } finally {
       setLoading(false);
@@ -69,17 +69,22 @@ function Add() {
   };
 
   return (
-    <div className="w-full max-w-4xl px-8 py-8">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-10">
+      <div className="mb-7">
+        <p className="text-sm font-semibold text-orange-500">MENU MANAGEMENT</p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Add a food item</h1>
+        <p className="mt-2 text-sm text-slate-500">Add a new dish to your menu and make it available to customers.</p>
+      </div>
       <form
-        className="flex flex-col gap-6"
+        className="flex flex-col gap-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8"
         onSubmit={onSubmitHandler}
       >
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm font-semibold text-slate-700">
             Upload Image
           </p>
 
-          <label htmlFor="image" className="cursor-pointer w-fit">
+          <label htmlFor="image" className="group w-fit cursor-pointer">
             <img
               src={
                 image
@@ -87,7 +92,7 @@ function Add() {
                   : assets.upload_area
               }
               alt="Upload"
-              className="w-32 h-32 object-cover rounded-lg border border-gray-200 hover:border-orange-400 transition"
+              className="h-36 w-36 rounded-xl border border-dashed border-slate-300 bg-slate-50 object-cover transition group-hover:border-orange-400 group-hover:bg-orange-50"
             />
           </label>
 
@@ -108,7 +113,7 @@ function Add() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm font-semibold text-slate-700">
             Product name
           </p>
 
@@ -118,12 +123,12 @@ function Add() {
             type="text"
             name="name"
             placeholder="Type here..."
-            className="w-full max-w-lg px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-orange-500 transition"
+            className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
           />
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm font-semibold text-slate-700">
             Product description
           </p>
 
@@ -133,13 +138,13 @@ function Add() {
             name="description"
             rows={6}
             placeholder="Write content here..."
-            className="w-full max-w-lg px-4 py-3 border border-gray-300 rounded-lg outline-none resize-none focus:border-orange-500 transition"
+            className="w-full max-w-2xl resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-6">
+        <div className="flex flex-col gap-6 sm:flex-row">
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-sm font-semibold text-slate-700">
               Product category
             </p>
 
@@ -147,7 +152,7 @@ function Add() {
               onChange={onChangeHandler}
               value={data.category}
               name="category"
-              className="w-48 px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-orange-500 transition"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100 sm:w-52"
             >
               <option value="Salad">Salad</option>
               <option value="Rolls">Rolls</option>
@@ -161,7 +166,7 @@ function Add() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-sm font-semibold text-slate-700">
               Product price
             </p>
 
@@ -171,7 +176,7 @@ function Add() {
               type="number"
               name="price"
               placeholder="$20"
-              className="w-48 px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-orange-500 transition"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100 sm:w-52"
             />
           </div>
         </div>
@@ -179,7 +184,7 @@ function Add() {
         <button
           type="submit"
           disabled={loading}
-          className="w-32 py-3 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"
+          className="flex w-40 items-center justify-center rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? (
             <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>

@@ -1,50 +1,83 @@
-import React from 'react'
 import { assets } from '../assets/assets'
 import { NavLink } from 'react-router-dom'
 
-function Sidebar() {
+type SidebarProps = {
+  isOpen: boolean
+  onClose: () => void
+}
+
+function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-4 px-4 py-3 rounded-lg cursor-pointer transition ${
+    `group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors md:gap-4 md:px-4 ${
       isActive
-        ? 'bg-orange-100 text-orange-500 border-r-4 border-orange-500'
-        : 'text-gray-700 hover:bg-gray-100'
+        ? 'bg-orange-50 text-orange-600 shadow-sm ring-1 ring-orange-100'
+        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
     }`
 
   return (
-    <div className="w-64 min-h-screen bg-white border-r border-gray-200 px-5 py-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-8">
-        Admin portal
-      </h2>
+    <>
+      {isOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={onClose}
+          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[1px] md:hidden"
+        />
+      )}
+      <aside
+        id="admin-sidebar"
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white px-5 py-6 shadow-xl transition-transform duration-300 md:w-64 md:translate-x-0 md:shadow-sm ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        aria-label="Admin navigation"
+      >
+      <div className="mb-9 flex h-10 items-center justify-between">
+        <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          Admin <span className="text-orange-500">portal</span>
+        </h2>
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={onClose}
+          className="grid h-9 w-9 place-items-center rounded-lg text-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:hidden"
+        >
+          ×
+        </button>
+      </div>
 
-      <div className="flex flex-col gap-3">
-        <NavLink to="/add" className={navLinkClass}>
+      <p className="mb-3 hidden px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 md:block">Workspace</p>
+      <nav className="flex flex-col gap-2">
+        <NavLink to="/add" aria-label="Add items" title="Add items" onClick={onClose} className={navLinkClass}>
           <img
             src={assets.add_icon}
             alt="Add Items"
-            className="w-6 h-6"
+            className="h-5 w-5 shrink-0 opacity-80 group-hover:opacity-100"
           />
-          <p className="font-medium">Add Items</p>
+          <span>Add items</span>
         </NavLink>
 
-        <NavLink to="/list" className={navLinkClass}>
+        <NavLink to="/list" aria-label="List items" title="List items" onClick={onClose} className={navLinkClass}>
           <img
             src={assets.order_icon}
             alt="List Items"
-            className="w-6 h-6"
+            className="h-5 w-5 shrink-0 opacity-80 group-hover:opacity-100"
           />
-          <p className="font-medium">List Items</p>
+          <span>Food items</span>
         </NavLink>
 
-        <NavLink to="/orders" className={navLinkClass}>
+        <NavLink to="/orders" aria-label="Orders" title="Orders" onClick={onClose} className={navLinkClass}>
           <img
             src={assets.order_icon}
             alt="Orders"
-            className="w-6 h-6"
+            className="h-5 w-5 shrink-0 opacity-80 group-hover:opacity-100"
           />
-          <p className="font-medium">Orders</p>
+          <span>Orders</span>
         </NavLink>
+      </nav>
+      <div className="mt-auto hidden rounded-2xl bg-orange-50 p-4 md:block">
+        <p className="text-sm font-semibold text-slate-800">Fresh food, made easy</p>
+        <p className="mt-1 text-xs leading-5 text-slate-500">Manage your menu and keep orders moving.</p>
       </div>
-    </div>
+      </aside>
+    </>
   )
 }
 
