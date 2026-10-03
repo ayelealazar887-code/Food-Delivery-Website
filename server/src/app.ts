@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import foodRouter from './routes/food.route';
 import userRouter from './routes/user.route';
+import cartRouter from './routes/cart.route';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use(
 //api endpoints
 app.use('/api/food', foodRouter);
 app.use('/api/user', userRouter);
+app.use('/api/cart', cartRouter);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

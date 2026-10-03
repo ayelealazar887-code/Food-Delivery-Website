@@ -25,8 +25,8 @@ function FoodDisplay({ category }: { category: string }) {
                 {filteredFood.map((item) => {
                     return (
                         <FoodItem
-                            key={item._id}
-                            id={item._id}
+                            key={item.id}
+                            id={item.id}
                             name={item.name}
                             description={item.description}
                             price={item.price}

@@ -10,17 +10,21 @@ function Cart() {
     throw new Error('Cart must be used inside StoreContextProvider')
   }
 
-  const { cartItems, food_list, removeFromCart, getTotalCartAmount } = context
+  const {
+    cartItems,
+    food_list,
+    removeFromCart,
+    getTotalCartAmount,
+  } = context
+
   const subtotal = getTotalCartAmount()
-
   const deliveryFee = subtotal === 0 ? 0 : 2
-
   const total = subtotal + deliveryFee
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="w-full">
-        {/* Cart Header */}
+
         <div className="grid grid-cols-[80px_2fr_1fr_1fr_1fr_60px] items-center gap-4 text-sm font-semibold text-gray-600">
           <p>Items</p>
           <p>Title</p>
@@ -34,10 +38,10 @@ function Cart() {
 
         <div className="space-y-4">
           {food_list.map((item) => {
-            if (cartItems[item._id] > 0) {
+            if (cartItems[item.id] > 0) {
               return (
                 <div
-                  key={item._id}
+                  key={item.id}
                   className="grid grid-cols-[80px_2fr_1fr_1fr_1fr_60px] items-center gap-4 border-b border-gray-100 pb-4"
                 >
                   <img
@@ -55,15 +59,15 @@ function Cart() {
                   </p>
 
                   <p className="text-gray-600">
-                    {cartItems[item._id]}
+                    {cartItems[item.id]}
                   </p>
 
                   <p className="font-semibold text-gray-800">
-                    ${item.price * cartItems[item._id]}
+                    ${item.price * cartItems[item.id]}
                   </p>
 
                   <button
-                    onClick={() => removeFromCart(item._id)}
+                    onClick={() => removeFromCart(item.id)}
                     className="text-red-500 font-semibold hover:text-red-700 transition-colors"
                   >
                     x
@@ -75,7 +79,9 @@ function Cart() {
             return null
           })}
         </div>
+
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-12">
+
           <div className="max-w-md">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">
               Cart Totals
@@ -103,14 +109,13 @@ function Cart() {
             </div>
 
             <button
-            onClick={() => navigate('/order')}
+              onClick={() => navigate('/order')}
               className="mt-8 w-full rounded-lg bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600"
             >
               PROCEED TO CHECKOUT
             </button>
           </div>
 
-          {/* Promo Code */}
           <div className="flex items-start">
             <div className="w-full max-w-md">
               <p className="mb-4 text-sm text-gray-500">
