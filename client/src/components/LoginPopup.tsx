@@ -1,20 +1,51 @@
-import React, { useState } from 'react'
-import { assets } from '../assets/assets'
+import React, { useContext, useState } from "react";
+import { assets } from "../assets/assets";
+import api from "../api/axios";
+import { StoreContext } from "../context/StoreContext";
 
 function LoginPopup({
   setShowLogin,
 }: {
-  setShowLogin: React.Dispatch<React.SetStateAction<boolean>>
+  setShowLogin: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const [currentState, setCurrentState] = useState('Sign Up')
+  const { token, setToken } = useContext(StoreContext)!;
+  const [currentState, setCurrentState] = useState("Login");
+  const [data, setData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const onChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const name = event.target.name;
+    const value = event.target.value;
+    setData((data) => ({ ...data, [name]: value }));
+  };
+
+  const onLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const endpoint = currentState === "Login" ? "/login" : "/register";
+    const response = await api.post(endpoint, data);
+    
+    if (response.data.success) {
+      setToken(response.data.token);
+      localStorage.setItem("token", response.data.token);
+
+      setShowLogin(false);
+    } else {
+      alert(response.data.message);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <form className="relative w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+      <form
+        onSubmit={onLogin}
+        className="relative w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl"
+      >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            {currentState}
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800">{currentState}</h2>
 
           <img
             onClick={() => setShowLogin(false)}
@@ -25,9 +56,12 @@ function LoginPopup({
         </div>
 
         <div className="flex flex-col gap-4">
-          {currentState === 'Login' ? null : (
+          {currentState === "Login" ? null : (
             <input
               type="text"
+              name="name"
+              onChange={onChangeHandler}
+              value={data.name}
               placeholder="Your name"
               required
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
@@ -35,6 +69,9 @@ function LoginPopup({
           )}
 
           <input
+            name="email"
+            onChange={onChangeHandler}
+            value={data.email}
             type="email"
             placeholder="Your email"
             required
@@ -42,6 +79,9 @@ function LoginPopup({
           />
 
           <input
+            name="password"
+            onChange={onChangeHandler}
+            value={data.password}
             type="password"
             placeholder="Password"
             required
@@ -53,26 +93,22 @@ function LoginPopup({
           type="submit"
           className="w-full mt-6 rounded-lg bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600 active:scale-[0.98]"
         >
-          {currentState === 'Sign Up' ? 'Create account' : 'Login'}
+          {currentState === "Sign Up" ? "Create account" : "Login"}
         </button>
 
         <div className="flex items-start gap-2 mt-5">
-          <input
-            type="checkbox"
-            required
-            className="mt-1 accent-orange-500"
-          />
+          <input type="checkbox" required className="mt-1 accent-orange-500" />
 
           <p className="text-xs leading-5 text-gray-500">
             By continuing, I agree to the terms of use & privacy policy.
           </p>
         </div>
 
-        {currentState === 'Login' ? (
+        {currentState === "Login" ? (
           <p className="mt-5 text-sm text-gray-500">
-            Create a new account?{' '}
+            Create a new account?{" "}
             <span
-              onClick={() => setCurrentState('Sign Up')}
+              onClick={() => setCurrentState("Sign Up")}
               className="cursor-pointer font-semibold text-orange-500 hover:text-orange-600"
             >
               Click here
@@ -80,9 +116,9 @@ function LoginPopup({
           </p>
         ) : (
           <p className="mt-5 text-sm text-gray-500">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <span
-              onClick={() => setCurrentState('Login')}
+              onClick={() => setCurrentState("Login")}
               className="cursor-pointer font-semibold text-orange-500 hover:text-orange-600"
             >
               Login here
@@ -91,7 +127,7 @@ function LoginPopup({
         )}
       </form>
     </div>
-  )
+  );
 }
 
-export default LoginPopup
+export default LoginPopup;

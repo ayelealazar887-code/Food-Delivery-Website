@@ -1,4 +1,4 @@
-import React, { useState, type ReactNode } from 'react'
+import React, { useEffect, useState, type ReactNode } from 'react'
 import { food_list } from '../assets/assets'
 import { StoreContext, type StoreContextType } from './StoreContext'
 
@@ -8,6 +8,7 @@ type Props = {
 
 function StoreContextProvider({ children }: Props) {
   const [cartItems, setCartItems] = useState<{ [key: string]: number }>({})
+  const [token, setToken] = useState<string>('');
 
   const addToCart = (itemId: string) => {
     setCartItems((prev) => ({
@@ -32,13 +33,19 @@ function StoreContextProvider({ children }: Props) {
     }
     return totalAmount
   }
-
+  useEffect(() => {
+    if(localStorage.getItem("token")){
+      setToken(localStorage.getItem("token"))
+    }
+  },[])
   const contextValue: StoreContextType = {
     food_list,
     cartItems,
     addToCart,
     removeFromCart,
     getTotalCartAmount,
+    token,
+    setToken
   }
 
   return (

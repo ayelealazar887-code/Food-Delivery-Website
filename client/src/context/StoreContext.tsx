@@ -6,7 +6,9 @@ export type StoreContextType = {
   cartItems: { [key: string]: number }
   addToCart: (itemId: string) => void
   removeFromCart: (itemId: string) => void
-  getTotalCartAmount: () => number
+  getTotalCartAmount: () => number,
+  token: string,
+  setToken:  React.Dispatch<React.SetStateAction<string>>
 }
 
 export const StoreContext = createContext<StoreContextType | null>(null)
