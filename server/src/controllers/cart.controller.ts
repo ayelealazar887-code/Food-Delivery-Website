@@ -7,7 +7,11 @@ const addCart = async (
   res: Response
 ) => {
   try {
-    const { userId, itemId } = req.body
+    const { userId } = req
+    const { itemId } = req.body
+
+    console.log('ADD USER ID:', userId)
+    console.log('ADD ITEM ID:', itemId)
 
     if (!userId || !itemId) {
       return res.status(400).json({
@@ -29,7 +33,7 @@ const addCart = async (
       })
     }
 
-    const cartData = (user.cartData as Record<string, number>) || {}
+    const cartData = (user.cartData ?? {}) as Record<string, number>
 
     cartData[itemId] = (cartData[itemId] || 0) + 1
 
@@ -48,7 +52,7 @@ const addCart = async (
       cartData,
     })
   } catch (error) {
-    console.error(error)
+    console.error('ADD CART ERROR:', error)
 
     return res.status(500).json({
       success: false,
@@ -63,7 +67,11 @@ const removeCart = async (
   res: Response
 ) => {
   try {
-    const { userId, itemId } = req.body
+    const { userId } = req
+    const { itemId } = req.body
+
+    console.log('USER ID:', userId)
+    console.log('ITEM ID:', itemId)
 
     if (!userId || !itemId) {
       return res.status(400).json({
@@ -85,7 +93,7 @@ const removeCart = async (
       })
     }
 
-    const cartData = (user.cartData as Record<string, number>) || {}
+    const cartData = (user.cartData ?? {}) as Record<string, number>
 
     if (cartData[itemId]) {
       cartData[itemId] -= 1
@@ -110,7 +118,7 @@ const removeCart = async (
       cartData,
     })
   } catch (error) {
-    console.error(error)
+    console.error('REMOVE CART ERROR:', error)
 
     return res.status(500).json({
       success: false,
@@ -125,12 +133,12 @@ const getCart = async (
   res: Response
 ) => {
   try {
-    const { userId } = req.body
+    const { userId } = req
 
     if (!userId) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        message: 'User ID is required',
+        message: 'User not authorized',
       })
     }
 
@@ -152,10 +160,10 @@ const getCart = async (
 
     return res.status(200).json({
       success: true,
-      cartData: user.cartData,
+      cartData: user.cartData || {},
     })
   } catch (error) {
-    console.error(error)
+    console.error('GET CART ERROR:', error)
 
     return res.status(500).json({
       success: false,

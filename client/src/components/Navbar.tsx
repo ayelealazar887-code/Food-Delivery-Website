@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { StoreContext } from "../context/StoreContext";
 
@@ -14,8 +14,9 @@ function Navbar({
       token: "",
       setToken: () => {},
     };
-  
+
   const navigate = useNavigate();
+  const location = useLocation();
 
   const navLinks = [
     { name: "home", label: "Home", id: "home" },
@@ -24,29 +25,31 @@ function Navbar({
     { name: "contact-us", label: "Contact Us", id: "contact-us" },
   ];
 
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-    });
+  const handleNavClick = (id: string) => {
+    if (location.pathname !== "/") {
+      navigate("/", {
+        state: {
+          scrollTo: id,
+        },
+      });
+    } else {
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     setToken("");
-    navigate("/")
+    navigate("/");
   };
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         <button
-          onClick={() => {
-            if (window.location.pathname !== "/") {
-              window.location.href = "/";
-            } else {
-              scrollToSection("home");
-            }
-          }}
+          onClick={() => handleNavClick("home")}
           className="flex-shrink-0 cursor-pointer"
         >
           <img
@@ -60,7 +63,7 @@ function Navbar({
           {navLinks.map((item) => (
             <button
               key={item.name}
-              onClick={() => scrollToSection(item.id)}
+              onClick={() => handleNavClick(item.id)}
               className="relative py-2 text-base font-medium text-gray-600 hover:text-orange-500 transition-colors duration-200"
             >
               {item.label}

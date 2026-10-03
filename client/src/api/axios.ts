@@ -6,5 +6,8 @@ const api = axios.create({
 export const apii = axios.create({
   baseURL: 'http://localhost:5000/api/food',
 })
+export const apiii = axios.create({
+  baseURL: 'http://localhost:5000/api/cart',
+})
 
 export default api

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import type { Request, Response, NextFunction } from 'express'
 
-const authMiddleware = async (
+const authMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -9,9 +9,9 @@ const authMiddleware = async (
   const { token } = req.headers
 
   if (!token) {
-    return res.json({
+    return res.status(401).json({
       success: false,
-      message: 'Not Authorized user',
+      message: 'Not Authorized',
     })
   }
 
@@ -21,17 +21,15 @@ const authMiddleware = async (
       process.env.JWT_SECRET as string
     ) as jwt.JwtPayload
 
-    req.body.userId = token_decode.id
+    req.userId = token_decode.id
 
     next()
   } catch (error) {
-    return res.json({
+    return res.status(401).json({
       success: false,
       message: 'Invalid token',
     })
   }
 }
 
-export {
-  authMiddleware,
-}
+export { authMiddleware }
