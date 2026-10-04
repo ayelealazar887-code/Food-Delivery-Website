@@ -17,8 +17,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "YOUR_CLIENT_VERCEL_URL",
-      "YOUR_ADMIN_VERCEL_URL",
+      process.env.CLIENT_URL!,
+      process.env.ADMIN_URL!,
     ],
     credentials: true,
   })
