@@ -5,12 +5,27 @@ import crypto from 'crypto'
 
 const CHAPA_URL = 'https://api.chapa.co/v1/transaction'
 
+interface ChapaVerifyResponse {
+  status: string
+  data?: {
+    status: string
+    amount: string | number
+  }
+}
+
+interface ChapaInitResponse {
+  status: string
+  data: {
+    checkout_url: string
+  }
+}
+
 const verifyWithChapa = async (txRef: string) => {
   const response = await fetch(`${CHAPA_URL}/verify/${encodeURIComponent(txRef)}`, {
     method: 'GET',
     headers: { Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}` },
   })
-  const data = await response.json()
+  const data = (await response.json()) as ChapaVerifyResponse
   const paid =
     response.ok && data.status === 'success' && data.data?.status === 'success'
   return { paid, data }
@@ -78,7 +93,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       }),
     })
 
-    const chapaData = await chapaResponse.json()
+    const chapaData = (await chapaResponse.json()) as ChapaInitResponse
 
     if (!chapaResponse.ok || chapaData.status !== 'success') {
       await prisma.order.delete({ where: { id: order.id } })
@@ -131,7 +146,7 @@ export const verifyChapaPayment = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Payment was not successful' })
     }
 
-    if (Number(data.data.amount) !== order.amount) {
+    if (Number(data.data?.amount) !== order.amount) {
       return res.status(400).json({
         success: false,
         message: 'Payment amount does not match order amount',
@@ -167,7 +182,7 @@ export const chapaCallback = async (req: Request, res: Response) => {
 
     if (order && !order.payment) {
       const { paid, data } = await verifyWithChapa(trx_ref)
-      if (paid && Number(data.data.amount) === order.amount) {
+      if (paid && Number(data.data?.amount) === order.amount) {
         await markOrderPaid(order.id)
       }
     }
