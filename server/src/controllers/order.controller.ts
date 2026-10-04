@@ -1,10 +1,15 @@
 import type { Request, Response } from "express";
+import type { AuthRequest } from "../types/auth";
 import prisma from "../config/prisma";
 import crypto from "crypto";
 
 const CHAPA_URL = "https://api.chapa.co/v1/transaction";
 
-export const createOrder = async (req: Request, res: Response) => {
+// Create order
+export const createOrder = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { userId } = req;
 
@@ -48,13 +53,6 @@ export const createOrder = async (req: Request, res: Response) => {
         txRef,
       },
     });
-
-    console.log(
-      "CHAPA KEY:",
-      process.env.CHAPA_SECRET_KEY
-        ? `${process.env.CHAPA_SECRET_KEY.slice(0, 20)}...`
-        : "MISSING",
-    );
 
     const chapaResponse = await fetch(`${CHAPA_URL}/initialize`, {
       method: "POST",
@@ -112,9 +110,11 @@ export const createOrder = async (req: Request, res: Response) => {
   }
 };
 
-//payment contoller
-
-export const verifyChapaPayment = async (req: Request, res: Response) => {
+// Verify Chapa payment
+export const verifyChapaPayment = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { txRef } = req.params;
 
@@ -215,9 +215,11 @@ export const verifyChapaPayment = async (req: Request, res: Response) => {
   }
 };
 
-//tsx
-
-export const chapaCallback = async (req: Request, res: Response) => {
+// Chapa callback
+export const chapaCallback = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { trx_ref } = req.query;
 
