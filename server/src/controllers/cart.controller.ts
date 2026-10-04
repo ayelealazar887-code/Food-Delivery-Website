@@ -1,10 +1,10 @@
-import type { Request, Response } from 'express'
+import type { Response } from 'express'
+import type { AuthRequest } from '../types/auth'
 import prisma from '../config/prisma'
 
 type CartData = Record<string, number>
 
-// Add item to user's cart
-const addCart = async (req: Request, res: Response) => {
+const addCart = async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req
     const { itemId } = req.body
@@ -49,8 +49,7 @@ const addCart = async (req: Request, res: Response) => {
   }
 }
 
-// Remove item from user's cart
-const removeCart = async (req: Request, res: Response) => {
+const removeCart = async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req
     const { itemId } = req.body
@@ -92,8 +91,7 @@ const removeCart = async (req: Request, res: Response) => {
   }
 }
 
-// Get user's cart
-const getCart = async (req: Request, res: Response) => {
+const getCart = async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req
 

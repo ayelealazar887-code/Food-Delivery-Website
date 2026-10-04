@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express'
+import type { AuthRequest } from '../types/auth'
 import prisma from '../config/prisma'
 import crypto from 'crypto'
 
 const CHAPA_URL = 'https://api.chapa.co/v1/transaction'
 
-// Ask Chapa for the real status of a transaction
 const verifyWithChapa = async (txRef: string) => {
   const response = await fetch(`${CHAPA_URL}/verify/${encodeURIComponent(txRef)}`, {
     method: 'GET',
@@ -16,8 +16,7 @@ const verifyWithChapa = async (txRef: string) => {
   return { paid, data }
 }
 
-// Idempotent: only flips payment false -> true once, even if the callback
-// and the verify endpoint run at the same time
+// Only flips payment false -> true once, even if callback and verify race
 const markOrderPaid = async (orderId: string) => {
   const result = await prisma.order.updateMany({
     where: { id: orderId, payment: false },
@@ -26,8 +25,7 @@ const markOrderPaid = async (orderId: string) => {
   return result.count > 0
 }
 
-// Create order
-export const createOrder = async (req: Request, res: Response) => {
+export const createOrder = async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req
     const { items, amount, address } = req.body
@@ -56,13 +54,7 @@ export const createOrder = async (req: Request, res: Response) => {
     const txRef = `food-${crypto.randomUUID()}`
 
     const order = await prisma.order.create({
-      data: {
-        userId,
-        items,
-        amount: numericAmount,
-        address,
-        txRef,
-      },
+      data: { userId, items, amount: numericAmount, address, txRef },
     })
 
     const chapaResponse = await fetch(`${CHAPA_URL}/initialize`, {
@@ -90,7 +82,6 @@ export const createOrder = async (req: Request, res: Response) => {
 
     if (!chapaResponse.ok || chapaData.status !== 'success') {
       await prisma.order.delete({ where: { id: order.id } })
-
       return res.status(400).json({
         success: false,
         message: 'Unable to initialize Chapa payment',
@@ -110,7 +101,6 @@ export const createOrder = async (req: Request, res: Response) => {
   }
 }
 
-// Verify Chapa payment
 export const verifyChapaPayment = async (req: Request, res: Response) => {
   try {
     const { txRef } = req.params
@@ -127,7 +117,6 @@ export const verifyChapaPayment = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Order not found' })
     }
 
-    // Already paid: no need to call Chapa again
     if (order.payment) {
       return res.status(200).json({
         success: true,
@@ -139,10 +128,7 @@ export const verifyChapaPayment = async (req: Request, res: Response) => {
     const { paid, data } = await verifyWithChapa(txRef)
 
     if (!paid) {
-      return res.status(400).json({
-        success: false,
-        message: 'Payment was not successful',
-      })
+      return res.status(400).json({ success: false, message: 'Payment was not successful' })
     }
 
     if (Number(data.data.amount) !== order.amount) {
@@ -153,7 +139,6 @@ export const verifyChapaPayment = async (req: Request, res: Response) => {
     }
 
     await markOrderPaid(order.id)
-
     const updatedOrder = await prisma.order.findUnique({ where: { id: order.id } })
 
     return res.status(200).json({
@@ -167,7 +152,6 @@ export const verifyChapaPayment = async (req: Request, res: Response) => {
   }
 }
 
-// Chapa callback
 export const chapaCallback = async (req: Request, res: Response) => {
   try {
     const { trx_ref } = req.query
@@ -183,7 +167,6 @@ export const chapaCallback = async (req: Request, res: Response) => {
 
     if (order && !order.payment) {
       const { paid, data } = await verifyWithChapa(trx_ref)
-
       if (paid && Number(data.data.amount) === order.amount) {
         await markOrderPaid(order.id)
       }

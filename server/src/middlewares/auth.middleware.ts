@@ -1,10 +1,11 @@
 import jwt from 'jsonwebtoken'
-import type { Request, Response, NextFunction } from 'express'
+import type { Response, NextFunction } from 'express'
+import type { AuthRequest } from '../types/auth'
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET is not set')
 
-const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
   const token = req.headers.token
 
   if (typeof token !== 'string') {
