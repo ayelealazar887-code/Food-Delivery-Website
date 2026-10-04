@@ -1,19 +1,18 @@
-import axios from 'axios'
-
+import axios from "axios"
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api/user',
+  baseURL: `${import.meta.env.VITE_API_URL}/api/user`,
 })
 
 export const apii = axios.create({
-  baseURL: 'http://localhost:5000/api/food',
+  baseURL: `${import.meta.env.VITE_API_URL}/api/food`,
 })
 
 export const apiii = axios.create({
-  baseURL: 'http://localhost:5000/api/cart',
+  baseURL: `${import.meta.env.VITE_API_URL}/api/cart`,
 })
 
 export const apiOrder = axios.create({
-  baseURL: 'http://localhost:5000/api/order',
+  baseURL: `${import.meta.env.VITE_API_URL}/api/order`,
 })
 
-export default api
+export default api;
