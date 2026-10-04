@@ -1,282 +1,197 @@
-import type { Request, Response } from "express";
-import type { AuthRequest } from "../types/auth";
-import prisma from "../config/prisma";
-import crypto from "crypto";
+import type { Request, Response } from 'express'
+import prisma from '../config/prisma'
+import crypto from 'crypto'
 
-const CHAPA_URL = "https://api.chapa.co/v1/transaction";
+const CHAPA_URL = 'https://api.chapa.co/v1/transaction'
+
+// Ask Chapa for the real status of a transaction
+const verifyWithChapa = async (txRef: string) => {
+  const response = await fetch(`${CHAPA_URL}/verify/${encodeURIComponent(txRef)}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}` },
+  })
+  const data = await response.json()
+  const paid =
+    response.ok && data.status === 'success' && data.data?.status === 'success'
+  return { paid, data }
+}
+
+// Idempotent: only flips payment false -> true once, even if the callback
+// and the verify endpoint run at the same time
+const markOrderPaid = async (orderId: string) => {
+  const result = await prisma.order.updateMany({
+    where: { id: orderId, payment: false },
+    data: { payment: true, status: 'PROCESSING' },
+  })
+  return result.count > 0
+}
 
 // Create order
-export const createOrder = async (
-  req: AuthRequest,
-  res: Response
-) => {
+export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { userId } = req;
-
-    const { items, amount, address } = req.body;
+    const { userId } = req
+    const { items, amount, address } = req.body
 
     if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "User not authorized",
-      });
+      return res.status(401).json({ success: false, message: 'User not authorized' })
     }
 
     if (!items || !amount || !address) {
       return res.status(400).json({
         success: false,
-        message: "Items, amount and address are required",
-      });
+        message: 'Items, amount and address are required',
+      })
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
+    const numericAmount = Number(amount)
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid amount' })
+    }
 
+    const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+      return res.status(404).json({ success: false, message: 'User not found' })
     }
 
-    const txRef = `food-${crypto.randomUUID()}`;
+    const txRef = `food-${crypto.randomUUID()}`
 
     const order = await prisma.order.create({
       data: {
         userId,
         items,
-        amount: Number(amount),
+        amount: numericAmount,
         address,
         txRef,
       },
-    });
+    })
 
     const chapaResponse = await fetch(`${CHAPA_URL}/initialize`, {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: amount.toString(),
-        currency: "ETB",
+        amount: numericAmount.toString(),
+        currency: 'ETB',
         email: user.email,
         first_name: user.name,
         tx_ref: txRef,
         callback_url: `${process.env.BACKEND_URL}/api/order/chapa/callback`,
         return_url: `${process.env.FRONTEND_URL}/payment-success`,
         customization: {
-          title: "Food Ordering",
-          description: "Food order payment",
+          title: 'Food Ordering',
+          description: 'Food order payment',
         },
       }),
-    });
+    })
 
-    const chapaData = await chapaResponse.json();
+    const chapaData = await chapaResponse.json()
 
-    console.log("CHAPA RESPONSE:", chapaData);
-
-    if (!chapaResponse.ok || chapaData.status !== "success") {
-      await prisma.order.delete({
-        where: {
-          id: order.id,
-        },
-      });
+    if (!chapaResponse.ok || chapaData.status !== 'success') {
+      await prisma.order.delete({ where: { id: order.id } })
 
       return res.status(400).json({
         success: false,
-        message: "Unable to initialize Chapa payment",
-        error: chapaData,
-      });
+        message: 'Unable to initialize Chapa payment',
+      })
     }
 
     return res.status(201).json({
       success: true,
-      message: "Order created",
+      message: 'Order created',
       orderId: order.id,
       txRef,
       checkoutUrl: chapaData.data.checkout_url,
-    });
+    })
   } catch (error) {
-    console.error("CREATE ORDER ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Error creating order",
-    });
+    console.error('CREATE ORDER ERROR:', error)
+    return res.status(500).json({ success: false, message: 'Error creating order' })
   }
-};
+}
 
 // Verify Chapa payment
-export const verifyChapaPayment = async (
-  req: Request,
-  res: Response
-) => {
+export const verifyChapaPayment = async (req: Request, res: Response) => {
   try {
-    const { txRef } = req.params;
+    const { txRef } = req.params
 
-    if (typeof txRef !== "string" || !txRef) {
+    if (typeof txRef !== 'string' || !txRef) {
       return res.status(400).json({
         success: false,
-        message: "Transaction reference is required",
-      });
+        message: 'Transaction reference is required',
+      })
     }
 
-    const order = await prisma.order.findUnique({
-      where: {
-        txRef,
-      },
-    });
-
+    const order = await prisma.order.findUnique({ where: { txRef } })
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      });
+      return res.status(404).json({ success: false, message: 'Order not found' })
     }
 
-    const response = await fetch(`${CHAPA_URL}/verify/${txRef}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
-      },
-    });
-
-    const data = await response.json();
-
-    console.log("CHAPA VERIFY:", data);
-
-    if (!response.ok) {
-      return res.status(400).json({
-        success: false,
-        message: "Unable to verify payment",
-        data,
-      });
-    }
-
-    if (data.status !== "success") {
-      return res.status(400).json({
-        success: false,
-        message: "Payment was not successful",
-        data,
-      });
-    }
-
-    const transaction = data.data;
-
-    if (transaction.status !== "success") {
-      return res.status(400).json({
-        success: false,
-        message: "Payment is not successful",
-        data: transaction,
-      });
-    }
-
-    if (Number(transaction.amount) !== order.amount) {
-      return res.status(400).json({
-        success: false,
-        message: "Payment amount does not match order amount",
-      });
-    }
-
+    // Already paid: no need to call Chapa again
     if (order.payment) {
       return res.status(200).json({
         success: true,
-        message: "Payment already verified",
+        message: 'Payment already verified',
         order,
-      });
+      })
     }
 
-    const updatedOrder = await prisma.order.update({
-      where: {
-        id: order.id,
-      },
-      data: {
-        payment: true,
-        status: "PROCESSING",
-      },
-    });
+    const { paid, data } = await verifyWithChapa(txRef)
+
+    if (!paid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment was not successful',
+      })
+    }
+
+    if (Number(data.data.amount) !== order.amount) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment amount does not match order amount',
+      })
+    }
+
+    await markOrderPaid(order.id)
+
+    const updatedOrder = await prisma.order.findUnique({ where: { id: order.id } })
 
     return res.status(200).json({
       success: true,
-      message: "Payment verified successfully",
+      message: 'Payment verified successfully',
       order: updatedOrder,
-    });
+    })
   } catch (error) {
-    console.error("VERIFY CHAPA PAYMENT ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Error verifying payment",
-    });
+    console.error('VERIFY CHAPA PAYMENT ERROR:', error)
+    return res.status(500).json({ success: false, message: 'Error verifying payment' })
   }
-};
+}
 
 // Chapa callback
-export const chapaCallback = async (
-  req: Request,
-  res: Response
-) => {
+export const chapaCallback = async (req: Request, res: Response) => {
   try {
-    const { trx_ref } = req.query;
+    const { trx_ref } = req.query
 
-    if (!trx_ref || typeof trx_ref !== "string") {
+    if (!trx_ref || typeof trx_ref !== 'string') {
       return res.status(400).json({
         success: false,
-        message: "Transaction reference is missing",
-      });
+        message: 'Transaction reference is missing',
+      })
     }
 
-    const response = await fetch(`${CHAPA_URL}/verify/${trx_ref}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
-      },
-    });
+    const order = await prisma.order.findUnique({ where: { txRef: trx_ref } })
 
-    const data = await response.json();
+    if (order && !order.payment) {
+      const { paid, data } = await verifyWithChapa(trx_ref)
 
-    console.log("CHAPA CALLBACK VERIFY:", data);
-
-    if (
-      response.ok &&
-      data.status === "success" &&
-      data.data?.status === "success"
-    ) {
-      const order = await prisma.order.findUnique({
-        where: {
-          txRef: trx_ref,
-        },
-      });
-
-      if (order && !order.payment) {
-        if (Number(data.data.amount) === order.amount) {
-          await prisma.order.update({
-            where: {
-              id: order.id,
-            },
-            data: {
-              payment: true,
-              status: "PROCESSING",
-            },
-          });
-        }
+      if (paid && Number(data.data.amount) === order.amount) {
+        await markOrderPaid(order.id)
       }
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Callback received",
-    });
+    return res.status(200).json({ success: true, message: 'Callback received' })
   } catch (error) {
-    console.error("CHAPA CALLBACK ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Callback processing failed",
-    });
+    console.error('CHAPA CALLBACK ERROR:', error)
+    return res.status(500).json({ success: false, message: 'Callback processing failed' })
   }
-};
+}
