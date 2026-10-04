@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { assets } from "../assets/assets";
 import api from "../api/axios";
 import { StoreContext } from "../context/StoreContext";
@@ -8,7 +8,7 @@ function LoginPopup({
 }: {
   setShowLogin: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const { token, setToken } = useContext(StoreContext)!;
+  const { setToken } = useContext(StoreContext)!;
   const [currentState, setCurrentState] = useState("Login");
   const [data, setData] = useState({
     name: "",
