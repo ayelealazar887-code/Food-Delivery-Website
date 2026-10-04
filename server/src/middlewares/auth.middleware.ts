@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken'
-import type { Request, Response, NextFunction } from 'express'
+import type { Response, NextFunction } from 'express'
+import type { AuthRequest } from '../types/auth'
 
 const authMiddleware = (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -21,7 +22,7 @@ const authMiddleware = (
       process.env.JWT_SECRET as string
     ) as jwt.JwtPayload
 
-    req.userId = token_decode.id
+    req.userId = token_decode.id as string
 
     next()
   } catch (error) {

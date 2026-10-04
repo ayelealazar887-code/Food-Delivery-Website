@@ -1,8 +1,6 @@
 import type { Request, Response } from "express";
 import cloudinary from "../config/cloudinary";
 import prisma from "../config/prisma";
-import fs from "fs";
-import { log } from "console";
 
 //Add food
 const addFood = async (req: Request, res: Response) => {
