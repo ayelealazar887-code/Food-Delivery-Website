@@ -1,4 +1,4 @@
-import React, { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { StoreContext, type StoreContextType, type Food } from "./StoreContext";
 import { apii, apiii } from "../api/axios";
 
