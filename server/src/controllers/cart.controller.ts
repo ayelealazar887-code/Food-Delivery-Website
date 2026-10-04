@@ -1,9 +1,10 @@
-import type { Request, Response } from 'express'
+import type { Response } from 'express'
+import type { AuthRequest } from '../types/auth'
 import prisma from '../config/prisma'
 
 // Add item to user's cart
 const addCart = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ) => {
   try {
@@ -63,7 +64,7 @@ const addCart = async (
 
 // Remove item from user's cart
 const removeCart = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ) => {
   try {
@@ -129,7 +130,7 @@ const removeCart = async (
 
 // Get user's cart
 const getCart = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ) => {
   try {
