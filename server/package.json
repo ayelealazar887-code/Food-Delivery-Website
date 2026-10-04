@@ -4,12 +4,11 @@
   "description": "Food delivery app backend",
   "main": "./src/server.ts",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/app.js",
-    "test": "vitest",
-    "test:run": "vitest run"
-  },
+  "dev": "tsx watch src/server.ts",
+  "postinstall": "prisma generate",
+  "build": "prisma generate && tsc",
+  "start": "node dist/app.js"
+},
   "keywords": [],
   "author": "Alazar A",
   "license": "ISC",
