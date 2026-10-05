@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import type { AuthRequest } from '../types/auth'
 import prisma from '../config/prisma'
+import { OrderStatus } from '../generated/prisma/enums'
 import crypto from 'crypto'
 
 const CHAPA_URL = 'https://api.chapa.co/v1/transaction'
@@ -38,6 +39,74 @@ const markOrderPaid = async (orderId: string) => {
     data: { payment: true, status: 'PROCESSING' },
   })
   return result.count > 0
+}
+
+export const listOrders = async (_req: Request, res: Response) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { date: 'desc' },
+    })
+
+    const itemIds = orders.flatMap((order) => {
+      const items = order.items
+      return items && typeof items === 'object' && !Array.isArray(items) ? Object.keys(items) : []
+    })
+    const foods = await prisma.food.findMany({ where: { id: { in: itemIds } } })
+    const foodsById = new Map(foods.map((food) => [food.id, food]))
+    const ordersWithItems = orders.map((order) => {
+      if (Array.isArray(order.items)) return order
+
+      const cartItems = order.items && typeof order.items === 'object' ? order.items : {}
+      const items = Object.entries(cartItems).map(([id, quantity]) => {
+        const food = foodsById.get(id)
+        return {
+          id,
+          name: food?.name ?? 'Unavailable item',
+          image: food?.image,
+          price: food?.price,
+          quantity: Number(quantity),
+        }
+      })
+      return { ...order, items }
+    })
+
+    return res.status(200).json({ success: true, data: ordersWithItems })
+  } catch (error) {
+    console.error('LIST ORDERS ERROR:', error)
+    return res.status(500).json({ success: false, message: 'Error fetching orders' })
+  }
+}
+
+export const updateOrderStatus = async (req: Request, res: Response) => {
+  try {
+    const { orderId, status } = req.body
+    const validStatuses = Object.values(OrderStatus) as string[]
+
+    if (typeof orderId !== 'string' || !orderId || typeof status !== 'string' || !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: 'A valid order ID and status are required' })
+    }
+
+    const existingOrder = await prisma.order.findUnique({ where: { id: orderId } })
+    if (!existingOrder) {
+      return res.status(404).json({ success: false, message: 'Order not found' })
+    }
+
+    if (!existingOrder.payment && ['PROCESSING', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Unpaid orders cannot be processed' })
+    }
+
+    const order = await prisma.order.update({
+      where: { id: orderId },
+      data: { status: status as (typeof OrderStatus)[keyof typeof OrderStatus] },
+    })
+    return res.status(200).json({ success: true, message: 'Order status updated', order })
+  } catch (error) {
+    console.error('UPDATE ORDER STATUS ERROR:', error)
+    return res.status(500).json({ success: false, message: 'Error updating order status' })
+  }
 }
 
 export const createOrder = async (req: AuthRequest, res: Response) => {
