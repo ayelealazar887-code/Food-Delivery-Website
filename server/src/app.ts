@@ -10,7 +10,7 @@ const app = express()
 
 const allowedOrigins = [
   'http://localhost:5173',
-  process.env.FRONTEND_URL?.replace(/\/$/, ''),
+  process.env.CLIENT_URL?.replace(/\/$/, ''),
   process.env.ADMIN_URL?.replace(/\/$/, ''),
 ].filter((o): o is string => Boolean(o))
 
